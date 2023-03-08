@@ -35,6 +35,7 @@ display.addshape(pawnW)
 
 piecesDic = {}
 
+
 class Board:
     def __init__(self):
         self.width = 8
@@ -183,6 +184,7 @@ boardPic = "D:/Chess/board.gif"
 #to make 0,0 the origin, x was added to fix center backgroud
 turtle.setworldcoordinates(x, x, board.screenSize, board.screenSize)
 display.bgpic(boardPic)
+
 #used to recenter background pic https://stackoverflow.com/questions/49086447/
 # turtle-graphics-how-can-background-image-in-the-center-after-setting-the-world
 canvas = display.getcanvas()
@@ -311,27 +313,70 @@ def check():
                 return piecesDic.get(curKing).color
     return "no"
 
+#checks if it is checkmate
+def checkmate():
+    pass
+
+#white pawns move in +y direction, black pawns move in -y direction
+def pawndir(pawn):
+    if pawn.color == "white":
+        return 1
+    else:
+        return -1
+
+#returns "white" if given black piece, and vise versa
+def oppcolor(piece):
+    if piece.color == "white":
+        return "black"
+    else:
+        return "white"
+
+#checks if user has selected a legal pawn move
+#checking if a piece is blocking the movement is only done for promoting a pawn (at least in this function)
+def pawnmovement(xOld, yOld, x, y, piece, captured):
+    d = pawndir(piece) #which way is the pawn going
+    if (x == xOld - 1 or x == xOld + 1) and y == yOld + d:
+        # check for en passant
+        if board.getPiece(x, yOld) and board.getPiece(x, yOld).enpassantable:
+            captured = board.getPiece(x, yOld)
+
+        if captured:
+            capture(captured)
+            captured = None
+        else:
+            return None
+    # I am multiplying by d because the pawn can only move up if white, and down if black
+    elif (piece.hasMoved and y * d > (yOld + d) * d) or \
+            (not piece.hasMoved and y * d > (yOld + (2 * d)) * d) or x != xOld or y * d < yOld * d:
+        return None
+    #piece.hasMoved = True
+    #promoting pawn to a queen, which happens at the end of the board, at y == 0 or 7, and nothing is in the way
+    if (y == 7 or y == 0) and not captured:
+        capture(piece) #get rid of old pawn
+        return queen(piece.color, xOld, yOld)
+    return piece
 
 def gameplay(x, y):
     x = x // SIZE
     y = y // SIZE
 
-    global piece
-    global whiteTurn
-    global piecesDic
+    global piece, whiteTurn, piecesDic
     if piece:
         xOld = piece.xcor()//SIZE
         yOld = piece.ycor()//SIZE
         if (xOld, yOld) == (x, y):
             piece = None
             return 0
-        #cannot capture your own king
-        if board.getPiece(x, y):
-            if board.getPiece(x, y).shape() == kingW or (x, y) == board.getPiece(x, y).shape() == kingB:
+
+        # if applicable, the piece that is being captured will be stored here
+        captured = board.getPiece(x, y)
+
+        #cannot capture your own piece
+        if captured and captured.color != oppcolor(piece):
                 piece = None
                 return 0
-        # check if in check after piece is moved
 
+        # check if in check after piece is moved
         original = piecesDic.copy()
         piecesDic[x, y] = piece
         del piecesDic[xOld, yOld]
@@ -344,66 +389,12 @@ def gameplay(x, y):
             return 0
 
         #checks movement for every piece
-        if piece.shape() == pawnW:
-            if (x == xOld - 1 or x == xOld + 1) and y == yOld + 1:
-                captured = board.getPiece(x, y)
-                if captured:
-                    if captured.color == "black":
-                        capture(captured)
-                    else:
-                        piece = None
-                        return 0
-                #en passant
-                elif board.getPiece(x, yOld):
-                    if board.getPiece(x, yOld).shape() == pawnB:
-                        if board.getPiece(x, yOld).enpassantable:
-                            capture(board.getPiece(x, yOld))
-                        else:
-                            piece = None
-                            return 0
-                    else:
-                        piece = None
-                        return 0
-                else:
-                    piece = None
-                    return 0
-            elif (piece.hasMoved and y > yOld + 1) or (not piece.hasMoved and y > yOld + 2) or x != xOld or y < yOld:
-                piece = None
+
+        if piece.shape() == pawnW or piece.shape() == pawnB:
+            piece = pawnmovement(xOld, yOld, x, y, piece, captured)
+            if not piece:
                 return 0
-            piece.hasMoved = True
-            if y == 7 and not board.getPiece(x, y):
-                capture(piece)
-                piece = queen("white", xOld, yOld)
-        if piece.shape() == pawnB:
-            if (x == xOld - 1 or x == xOld + 1) and y == yOld - 1:
-                captured = board.getPiece(x, y)
-                if captured:
-                    if captured.color == "white":
-                        capture(captured)
-                    else:
-                        piece = None
-                        return 0
-                #en passant
-                elif board.getPiece(x, yOld):
-                    if board.getPiece(x, yOld).shape() == pawnW:
-                        if board.getPiece(x, yOld).enpassantable:
-                            capture(board.getPiece(x, yOld))
-                        else:
-                            piece = None
-                            return 0
-                    else:
-                        piece = None
-                        return 0
-                else:
-                    piece = None
-                    return 0
-            elif (piece.hasMoved and y < yOld - 1) or (not piece.hasMoved and y < yOld - 2) or x != xOld or y > yOld:
-                piece = None
-                return 0
-            piece.hasMoved = True
-            if y == 0 and not board.getPiece(x, y):
-                capture(piece)
-                piece = queen("black", xOld, yOld)
+
         if piece.shape() == rookB or piece.shape() == rookW:
             if x != xOld and y != yOld:
                 piece = None
@@ -571,18 +562,18 @@ def gameplay(x, y):
                     else:
                         piece = None
                         return 0
+        for g in piecesDic:
+            if piecesDic[g].shape() == pawnB:
+                piecesDic[g].enpassantable = False
+            if piecesDic[g].shape() == pawnW:
+                piecesDic[g].enpassantable = False
         if (piece.shape() == pawnB or piece.shape() == pawnW) and (y == yOld + 2 or y == yOld - 2):
             piece.enpassantable = True
-        else:
-            for g in piecesDic:
-                if piecesDic[g].shape() == pawnB:
-                    piecesDic[g].enpassantable = False
-                if piecesDic[g].shape() == pawnW:
-                    piecesDic[g].enpassantable = False
         piece.speed(5)
         del piecesDic[xOld, yOld]
         piece.goto(25 + x * SIZE, 25 + y * SIZE)
         piecesDic[x, y] = piece
+        piece.hasMoved = True
         piece = None
         whiteTurn = not whiteTurn
     else:
