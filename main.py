@@ -7,18 +7,18 @@ SIZE = 50
 display = turtle.Screen()
 
 # Piece pictures drawn by me, board image from Chess.com
-rookB = "D:/Chess/Black Rook.gif"
-rookW = "D:/Chess/White Rook.gif"
-knightB = "D:/Chess/Black Knight.gif"
-knightW = "D:/Chess/White Knight.gif"
-bishopB = "D:/Chess/Black Bishop.gif"
-bishopW = "D:/Chess/White Bishop.gif"
-queenB = "D:/Chess/Black Queen.gif"
-queenW = "D:/Chess/White Queen.gif"
-kingB = "D:/Chess/Black King.gif"
-kingW = "D:/Chess/White King.gif"
-pawnB = "D:/Chess/Black Pawn.gif"
-pawnW = "D:/Chess/White Pawn.gif"
+rookB = "black-rook.gif"
+rookW = "white-rook.gif"
+knightB = "black-knight.gif"
+knightW = "white-knight.gif"
+bishopB = "black-bishop.gif"
+bishopW = "white-bishop.gif"
+queenB = "black-queen.gif"
+queenW = "white-queen.gif"
+kingB = "black-king.gif"
+kingW = "white-king.gif"
+pawnB = "black-pawn.gif"
+pawnW = "white-pawn.gif"
 display.addshape(rookB)
 display.addshape(rookW)
 display.addshape(knightB)
@@ -34,7 +34,7 @@ display.addshape(pawnW)
 
 piecesDic = {}
 
-
+# represents the chessboard
 class Board:
     def __init__(self):
         self.width = 8
@@ -204,48 +204,41 @@ whiteTurn = True
 piece = None  # stores selected piece
 
 
+# used to loop
+def loop_control():
+    pass
+
+
 # generates possible diagonal moves
 def diagonal_movement(x_old, y_old):
     possible_moves = []
+
+    #used to reduce repetition
+    def loops(a, b, c, d):
+        i = x_old + c
+        j = y_old + d
+        while i*c <= a*c and j*d <= b*d: #flipping inequality direction
+            possible_moves.append((i, j))
+            if board.get_piece(i, j):
+                break
+            i += c
+            j += d
+
+
     # possible moves top right
-    i = x_old + 1
-    j = y_old + 1
-    while i <= 7 and j <= 7:
-        possible_moves.append((i, j))
-        if board.get_piece(i, j):
-            break
-        i += 1
-        j += 1
+    loops(7, 7, 1, 1)
     # possible moves top left
-    i = x_old - 1
-    j = y_old + 1
-    while i >= 0 and j <= 7:
-        possible_moves.append((i, j))
-        if board.get_piece(i, j):
-            break
-        i -= 1
-        j += 1
+    loops(0, 7, -1, 1)
     # possible moves bottom left
-    i = x_old - 1
-    j = y_old - 1
-    while i >= 0 and j >= 0:
-        possible_moves.append((i, j))
-        if board.get_piece(i, j):
-            break
-        i -= 1
-        j -= 1
+    loops(0, 0, -1, -1)
     # possible moves bottom right
-    i = x_old + 1
-    j = y_old - 1
-    while i <= 7 and j >= 0:
-        possible_moves.append((i, j))
-        if board.get_piece(i, j):
-            break
-        i += 1
-        j -= 1
+    loops(7, 0, 1, -1)
     return possible_moves
 
 
+
+
+# removes a piece visually and from our dictionary
 def capture(victim):
     del piecesDic[(victim.xcor() // SIZE, victim.ycor() // SIZE)]
     victim.hideturtle()
@@ -274,42 +267,25 @@ def check(x=-1, y=-1, color="no"):
                 return "white"
         # below checks horizontal and vertical for rook and queen
         if piece.shape() == rookB or piece.shape() == rookW or piece.shape() == queenB or piece.shape() == queenW:
+            # used to reduce repetition
+            def loops(a, b, c, d, e):
+                temp_cor = [x + a, y + b]
+                while temp_cor[e]*d >= c*d:
+                    if (temp_cor[0], temp_cor[1]) == cur_king:
+                        return board.get_piece(temp_cor[0], temp_cor[1]).color
+                    if board.get_piece(temp_cor[0], temp_cor[1]):
+                        break
+                    temp_cor[0] += a
+                    temp_cor[1] += b
             # left
-            temp_x = x - 1
-            temp_y = y
-            while temp_x >= 0:
-                if (temp_x, temp_y) == cur_king:
-                    return board.get_piece(temp_x, temp_y).color
-                if board.get_piece(temp_x, temp_y):
-                    break
-                temp_x -= 1
+            loops(-1, 0, 0, 1, 0)
             # up
-            temp_x = x
-            temp_y = y + 1
-            while temp_y <= 7:
-                if (temp_x, temp_y) == cur_king:
-                    return board.get_piece(temp_x, temp_y).color
-                if board.get_piece(temp_x, temp_y):
-                    break
-                temp_y += 1
+            loops(0, 1, 7, -1, 1)
             # right
-            temp_x = x + 1
-            temp_y = y
-            while temp_x <= 7:
-                if (temp_x, temp_y) == cur_king:
-                    return board.get_piece(temp_x, temp_y).color
-                if board.get_piece(temp_x, temp_y):
-                    break
-                temp_x += 1
+            loops(1, 0, 7, -1, 0)
             # down
-            temp_x = x
-            temp_y = y - 1
-            while temp_y >= 0:
-                if (temp_x, temp_y) == cur_king:
-                    return board.get_piece(temp_x, temp_y).color
-                if board.get_piece(temp_x, temp_y):
-                    break
-                temp_y -= 1
+            loops(0, -1, 0, 1, 1)
+
         # takes care of bishop and rest of Queen's moves
         if piece.shape() == bishopB or piece.shape() == bishopW or piece.shape() == queenB or piece.shape() == queenW:
             possible_moves = diagonal_movement(x, y)
