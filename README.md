@@ -6,7 +6,7 @@ To run the program using Windows:
 3. Open the folder.
 4. While in the folder, type 'cmd' in the title bar (where the filepath is displayed) of the file explorer.
 5. Press Enter
-6. In the Command Prompt that opens, type 'Python' and press enter.
+6. In the Command Prompt that opens, type 'python' and press enter.
 7. If the Microsoft Store opens, it means python is not installed. You can download it in the window that opens.
 8. Go back to the command prompt and type 'python main.py'
 
