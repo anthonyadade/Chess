@@ -326,7 +326,8 @@ def pawnmovement(x_old, y_old, x, y, piece, captured):
     d = pawndir(piece)  # which way is the pawn going
     if (x == x_old - 1 or x == x_old + 1) and y == y_old + d:
         # check for en passant
-        if board.get_piece(x, y_old) and board.get_piece(x, y_old).enpassantable:
+        if board.get_piece(x, y_old) and (board.get_piece(x, y_old).shape() == pawnW or\
+                board.get_piece(x, y_old).shape() == pawnB) and board.get_piece(x, y_old).enpassantable:
             captured = board.get_piece(x, y_old)
 
         if captured:
