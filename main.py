@@ -278,13 +278,21 @@ def check(x=-1, y=-1, color="no"):
                     temp_cor[0] += a
                     temp_cor[1] += b
             # left
-            loops(-1, 0, 0, 1, 0)
+            check = loops(-1, 0, 0, 1, 0)
+            if check:
+                return check
             # up
-            loops(0, 1, 7, -1, 1)
+            check = loops(0, 1, 7, -1, 1)
+            if check:
+                return check
             # right
-            loops(1, 0, 7, -1, 0)
+            check = loops(1, 0, 7, -1, 0)
+            if check:
+                return check
             # down
-            loops(0, -1, 0, 1, 1)
+            check = loops(0, -1, 0, 1, 1)
+            if check:
+                return check
 
         # takes care of bishop and rest of Queen's moves
         if piece.shape() == bishopB or piece.shape() == bishopW or piece.shape() == queenB or piece.shape() == queenW:
@@ -343,7 +351,9 @@ def pawnmovement(x_old, y_old, x, y, piece, captured):
     # promoting pawn to a queen, which happens at the end of the board, at y == 0 or 7, and nothing is in the way
     if (y == 7 or y == 0) and not captured:
         capture(piece)  # get rid of old pawn
-        return queen(piece.color, x_old, y_old)
+        piece = queen(piece.color, x_old, y_old)
+        piecesDic[x_old, y_old] = piece
+        return piece
     return piece
 
 
