@@ -4,7 +4,7 @@ To run the program using Windows:
 1. Click on the green 'Code' button, then 'Download ZIP'.
 2. Extract the file to any folder.
 3. Open the folder.
-4. While in the folder, type 'cmd' in the tile bar (where the filepath is displayed) of the file explorer.
+4. While in the folder, type 'cmd' in the title bar (where the filepath is displayed) of the file explorer.
 5. Press Enter
 6. In the Command Prompt that opens, type 'Python' and press enter.
 7. If the Microsoft Store opens, it means python is not installed. You can download it in the window that opens.
