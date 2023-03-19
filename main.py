@@ -186,7 +186,7 @@ display = turtle.Screen()
 board = Board()
 
 turtle.setup(board.screenSize + x, board.screenSize + x)  # change window size
-boardPic = "D:/Chess/board.gif"
+boardPic = "board.gif"
 
 # to make 0,0 the origin, x was added to fix center backgroud
 turtle.setworldcoordinates(x, x, board.screenSize, board.screenSize)
