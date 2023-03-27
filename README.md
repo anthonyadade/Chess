@@ -1,6 +1,6 @@
 I got into chess near the end of 2021, and quickly became a very fun hobby to me. A year later, a coworker suggested to me that I create this game, as it would be a fun project and a good learning experience. Turns out it was! I had a lot of fun coding this, and learned a lot along the way, such as how to use the turtle library in python.
 
-*NOTE: The code is quite messy, as I initially just wanted to see if I could get it working, without code readability in mind. I am currently workin on cleaining it up and adding new features!
+*NOTE: The code is quite messy, as I initially just wanted to see if I could get it working, without code readability in mind. I am currently working on cleaning it up and adding new features!
 
 To run the program (Windows):
 1. Click on the green 'Code' button, then 'Download ZIP'.
