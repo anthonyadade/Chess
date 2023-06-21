@@ -38,8 +38,6 @@ display.addshape(white_wins)
 display.addshape(black_wins)
 display.addshape(stalemate)
 
-piecesDic = {}  # where the coordinates of the pieces will be stored
-
 
 # represents the chessboard
 class Board:
@@ -48,11 +46,18 @@ class Board:
         self.height = 8
         self.squareSize = SIZE
         self.screenSize = self.width * self.squareSize
+        self.whiteTurn = True
+        self.cur_piece = None
+        self.piecesDic = {}  # where the coordinates of the pieces will be stored
+
+    def end_turn(self):
+        self.whiteTurn = not self.whiteTurn
 
     def get_piece(self, x, y):
-        return piecesDic.get((x, y))
+        return self.piecesDic.get((x, y))
 
 
+# used to generate a piece on the board
 def piece_setup(color, shape, x, y):
     piece = turtle.Turtle()
     piece.speed(0)
@@ -61,8 +66,9 @@ def piece_setup(color, shape, x, y):
     piece.hasMoved = False
     piece.penup()
     piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
+    board.piecesDic[x, y] = piece
     return piece
+
 
 # initialize all pieces
 class Pieces:
@@ -72,8 +78,8 @@ class Pieces:
         self.bBishop = piece_setup("black", bishopB, 2, 7)
         self.bQueen = piece_setup("black", queenB, 3, 7)
         self.bKing = piece_setup("black", kingB, 4, 7)
-        self.bBishop2 = piece_setup("black",bishopB, 5, 7)
-        self.bKnight2 = piece_setup("black",knightB, 6, 7)
+        self.bBishop2 = piece_setup("black", bishopB, 5, 7)
+        self.bKnight2 = piece_setup("black", knightB, 6, 7)
         self.bRook2 = piece_setup("black", rookB, 7, 7)
         self.bPawn = piece_setup("black", pawnB, 0, 6)
         self.bPawn2 = piece_setup("black", pawnB, 1, 6)
@@ -127,9 +133,6 @@ canvas.itemconfig(display._bgpic, anchor="sw")  # pylint: disable=W0212
 
 pieces = Pieces()
 
-whiteTurn = True
-piece = None  # stores selected piece
-
 
 # generates possible diagonal moves
 def diagonal_movement(x_old, y_old):
@@ -159,7 +162,7 @@ def diagonal_movement(x_old, y_old):
 
 # removes a piece visually and from our dictionary
 def capture(victim):
-    del piecesDic[(victim.xcor() // SIZE, victim.ycor() // SIZE)]
+    del board.piecesDic[(victim.xcor() // SIZE, victim.ycor() // SIZE)]
     victim.hideturtle()
 
 
@@ -195,8 +198,8 @@ def check(x=-1, y=-1, color="no"):
             white_king = x, y
         else:
             black_king = x, y
-    for x, y in piecesDic:
-        piece = piecesDic[(x, y)]
+    for x, y in board.piecesDic:
+        piece = board.piecesDic[(x, y)]
         if piece.color == "white":
             cur_king = black_king
         else:
@@ -216,12 +219,12 @@ def check(x=-1, y=-1, color="no"):
         if piece.shape() == bishopB or piece.shape() == bishopW or piece.shape() == queenB or piece.shape() == queenW:
             possible_moves = diagonal_movement(x, y)
             if cur_king in possible_moves:
-                return piecesDic.get(cur_king).color
+                return board.piecesDic.get(cur_king).color
         if piece.shape() == knightB or piece.shape() == knightW:
             possible_moves = [(x + 1, y + 2), (x + 2, y + 1), (x + 2, y - 1), (x + 1, y - 2),
                               (x - 1, y - 2), (x - 2, y - 1), (x - 2, y + 1), (x - 1, y + 2)]
             if cur_king in possible_moves:
-                return piecesDic.get(cur_king).color
+                return board.piecesDic.get(cur_king).color
     return "no"
 
 
@@ -247,7 +250,7 @@ def pawnmovement(x_old, y_old, x, y, piece, captured, just_checking):
     d = pawndir(piece)  # which way is the pawn going
     if (x == x_old - 1 or x == x_old + 1) and y == y_old + d:
         # check for en passant
-        if board.get_piece(x, y_old) and (board.get_piece(x, y_old).shape() == pawnW or \
+        if board.get_piece(x, y_old) and (board.get_piece(x, y_old).shape() == pawnW or
                                           board.get_piece(x, y_old).shape() == pawnB) \
                 and board.get_piece(x, y_old).enpassantable:
             captured = board.get_piece(x, y_old)
@@ -266,11 +269,11 @@ def pawnmovement(x_old, y_old, x, y, piece, captured, just_checking):
     # promoting pawn to a queen, which happens at the end of the board, at y == 0 or 7, and nothing is in the way
     if (y == 7 or y == 0) and not captured and not just_checking:
         capture(piece)  # get rid of old pawn
-        if (piece.color == "white"):
+        if piece.color == "white":
             piece = piece_setup(piece.color, queenW, x_old, y_old)
         else:
             piece = piece_setup(piece.color, queenB, x_old, y_old)
-        piecesDic[x_old, y_old] = piece
+        board.piecesDic[x_old, y_old] = piece
         return piece
     return piece
 
@@ -295,63 +298,58 @@ def check_caller(x, y, piece, piecesDic, x_old, y_old):
     return in_check
 
 
-all_moves = {}  # stores all of the current possible moves
-
-
 # can determine if the current move is possible. If just checking, nothing in game is altered (no
 # pieces are moved or altered)
 def move_possible(x, y, just_checking):
-    global piece, whiteTurn, piecesDic
-
-    x_old = piece.xcor() // SIZE
-    y_old = piece.ycor() // SIZE
+    x_old = board.cur_piece.xcor() // SIZE
+    y_old = board.cur_piece.ycor() // SIZE
     if (x_old, y_old) == (x, y):
-        piece = None
+        board.cur_piece = None
         return 0
 
     # if applicable, the piece that is being captured will be stored here
     captured = board.get_piece(x, y)
 
     # cannot capture your own piece
-    if captured and captured.color != oppcolor(piece):
-        piece = None
+    if captured and captured.color != oppcolor(board.cur_piece):
+        board.cur_piece = None
         return 0
 
     # checks if king would be in check after move
-    if check_caller(x, y, piece, piecesDic, x_old, y_old) == piece.color:
-        piece = None
+    if check_caller(x, y, board.cur_piece, board.piecesDic, x_old, y_old) == board.cur_piece.color:
+        board.cur_piece = None
         return 0
 
     # checks movement for every piece
-    if piece.shape() == pawnW or piece.shape() == pawnB:
-        piece = pawnmovement(x_old, y_old, x, y, piece, captured, just_checking)
-        if not piece:
+    if board.cur_piece.shape() == pawnW or board.cur_piece.shape() == pawnB:
+        board.cur_piece = pawnmovement(x_old, y_old, x, y, board.cur_piece, captured, just_checking)
+        if not board.cur_piece:
             return 0
 
-    if piece.shape() == rookB or piece.shape() == rookW:
+    if board.cur_piece.shape() == rookB or board.cur_piece.shape() == rookW:
         if x != x_old and y != y_old:
-            piece = None
+            board.cur_piece = None
             return 0
-    if piece.shape() == bishopB or piece.shape() == bishopW:
+    if board.cur_piece.shape() == bishopB or board.cur_piece.shape() == bishopW:
         possible_moves = diagonal_movement(x_old, y_old)
         if (x, y) not in possible_moves:
-            piece = None
+            board.cur_piece = None
             return 0
-    if piece.shape() == queenB or piece.shape() == queenW:
+    if board.cur_piece.shape() == queenB or board.cur_piece.shape() == queenW:
         diagonal_moves = diagonal_movement(x_old, y_old)
         if x != x_old and y != y_old and (x, y) not in diagonal_moves:
-            piece = None
+            board.cur_piece = None
             return 0
-    if piece.shape() == knightB or piece.shape() == knightW:
+    if board.cur_piece.shape() == knightB or board.cur_piece.shape() == knightW:
         possible_moves = [(x_old + 1, y_old + 2), (x_old + 2, y_old + 1), (x_old + 2, y_old - 1),
                           (x_old + 1, y_old - 2), (x_old - 1, y_old - 2), (x_old - 2, y_old - 1),
                           (x_old - 2, y_old + 1), (x_old - 1, y_old + 2)]
         if (x, y) not in possible_moves:
-            piece = None
+            board.cur_piece = None
             return 0
         if captured and not just_checking:
             capture(captured)
-    if piece.shape() == kingB or piece.shape() == kingW:
+    if board.cur_piece.shape() == kingB or board.cur_piece.shape() == kingW:
         # take care of castling
         if (x, y) == (x_old - 2, y_old) or (x, y) == (x_old + 2, y_old):
             if x > x_old:
@@ -362,114 +360,115 @@ def move_possible(x, y, just_checking):
                 sevenorzero = 0
             # this checks if the corresponding rook has already moved
             # also checks if any pieces are in the way
-            if piece.color == "white":
+            if board.cur_piece.color == "white":
                 if board.get_piece(sevenorzero, 0):
                     cur_rook = board.get_piece(sevenorzero, 0)
                     if board.get_piece(sevenorzero, 0).hasMoved:
-                        piece = None
+                        board.cur_piece = None
                         return 0
                 else:
-                    piece = None
+                    board.cur_piece = None
                     return 0
                 if sevenorzero == 7:
                     if board.get_piece(5, 0) or board.get_piece(6, 0):
-                        piece = None
+                        board.cur_piece = None
                         return 0
                 else:
                     if board.get_piece(1, 0) or board.get_piece(2, 0) or board.get_piece(3, 0):
-                        piece = None
+                        board.cur_piece = None
                         return 0
             else:
                 if board.get_piece(sevenorzero, 7):
                     cur_rook = board.get_piece(sevenorzero, 7)
                     if board.get_piece(sevenorzero, 7).hasMoved:
-                        piece = None
+                        board.cur_piece = None
                         return 0
                 else:
-                    piece = None
+                    board.cur_piece = None
                     return 0
                 if sevenorzero == 7:
                     if board.get_piece(5, 7) or board.get_piece(6, 7):
-                        piece = None
+                        board.cur_piece = None
                         return 0
                 else:
                     if board.get_piece(1, 7) or board.get_piece(2, 7) or board.get_piece(3, 7):
-                        piece = None
+                        board.cur_piece = None
                         return 0
             # makes sure king isn't already in check, and doesn't move through check
             for i in range(2):
-                if check_caller(x_old + (i * temp), y, piece, piecesDic, x_old, y_old) == piece.color:
-                    piece = None
+                if check_caller(x_old + (i * temp), y, board.cur_piece, board.piecesDic, x_old, y_old)\
+                        == board.cur_piece.color:
+                    board.cur_piece = None
                     return 0
 
-            if piece.hasMoved:
-                piece = None
+            if board.cur_piece.hasMoved:
+                board.cur_piece = None
                 return 0
             # castling time :)
-            if piece.color == "white" and not just_checking:
+            if board.cur_piece.color == "white" and not just_checking:
                 if sevenorzero == 7:
                     cur_rook.speed(5)
-                    del piecesDic[7, 0]
+                    del board.piecesDic[7, 0]
                     # 275, 25
                     cur_rook.goto(25 + 5 * SIZE, 25 + y * SIZE)
-                    piecesDic[5, y] = cur_rook
+                    board.piecesDic[5, y] = cur_rook
 
-                    piece.speed(5)
-                    del piecesDic[x_old, y_old]
+                    board.cur_piece.speed(5)
+                    del board.piecesDic[x_old, y_old]
                     # 275, 25
-                    piece.goto(25 + 6 * SIZE, 25 + y * SIZE)
-                    piecesDic[6, y] = piece
+                    board.cur_piece.goto(25 + 6 * SIZE, 25 + y * SIZE)
+                    board.piecesDic[6, y] = board.cur_piece
                 else:
                     cur_rook.speed(5)
-                    del piecesDic[0, 0]
+                    del board.piecesDic[0, 0]
                     # 175, 25
                     cur_rook.goto(25 + 3 * SIZE, 25 + y * SIZE)
-                    piecesDic[3, y] = cur_rook
+                    board.piecesDic[3, y] = cur_rook
 
-                    piece.speed(5)
-                    del piecesDic[x_old, y_old]
+                    board.cur_piece.speed(5)
+                    del board.piecesDic[x_old, y_old]
                     # 275, 25
-                    piece.goto(25 + 2 * SIZE, 25 + y * SIZE)
-                    piecesDic[x, y] = piece
+                    board.cur_piece.goto(25 + 2 * SIZE, 25 + y * SIZE)
+                    board.piecesDic[x, y] = board.cur_piece
             elif not just_checking:
                 if sevenorzero == 7:
                     cur_rook.speed(5)
-                    del piecesDic[7, 7]
+                    del board.piecesDic[7, 7]
                     # 275, 375
                     cur_rook.goto(25 + 5 * SIZE, 25 + y * SIZE)
-                    piecesDic[5, y] = cur_rook
+                    board.piecesDic[5, y] = cur_rook
 
-                    piece.speed(5)
-                    del piecesDic[x_old, y_old]
+                    board.cur_piece.speed(5)
+                    del board.piecesDic[x_old, y_old]
                     # 275, 25
-                    piece.goto(25 + 6 * SIZE, 25 + y * SIZE)
-                    piecesDic[6, y] = piece
+                    board.cur_piece.goto(25 + 6 * SIZE, 25 + y * SIZE)
+                    board.piecesDic[6, y] = board.cur_piece
                 else:
                     cur_rook.speed(5)
-                    del piecesDic[0, 7]
+                    del board.piecesDic[0, 7]
                     # 175, 375
                     cur_rook.goto(25 + 3 * SIZE, 25 + y * SIZE)
-                    piecesDic[3, y] = cur_rook
+                    board.piecesDic[3, y] = cur_rook
 
-                    piece.speed(5)
-                    del piecesDic[x_old, y_old]
+                    board.cur_piece.speed(5)
+                    del board.piecesDic[x_old, y_old]
                     # 275, 25
-                    piece.goto(25 + 2 * SIZE, 25 + y * SIZE)
-                    piecesDic[x, y] = piece
+                    board.cur_piece.goto(25 + 2 * SIZE, 25 + y * SIZE)
+                    board.piecesDic[x, y] = board.cur_piece
             if just_checking:
-                return piece
+                return board.cur_piece
             # castling done, so end move
-            piece = None
-            whiteTurn = not whiteTurn
+            board.cur_piece = None
+            board.end_turn()
             return 0
 
         possible_moves = [(x_old, y_old + 1), (x_old + 1, y_old + 1), (x_old + 1, y_old), (x_old + 1, y_old - 1),
                           (x_old, y_old - 1), (x_old - 1, y_old - 1), (x_old - 1, y_old), (x_old - 1, y_old + 1)]
 
         if (x, y) not in possible_moves:
-            piece = None
+            board.cur_piece = None
             return 0
-    if piece.shape() != knightB and piece.shape() != knightW:
+    if board.cur_piece.shape() != knightB and board.cur_piece.shape() != knightW:
         temp_x = x_old
         temp_y = y_old
         while temp_x != x or temp_y != y:
@@ -483,39 +482,37 @@ def move_possible(x, y, just_checking):
                 temp_y -= 1
             if board.get_piece(temp_x, temp_y):
                 captured = board.get_piece(temp_x, temp_y)
-                if x == temp_x and y == temp_y and captured.color != piece.color \
-                        and piece.shape() != pawnB and piece.shape() != pawnW:
+                if x == temp_x and y == temp_y and captured.color != board.cur_piece.color \
+                        and board.cur_piece.shape() != pawnB and board.cur_piece.shape() != pawnW:
                     if not just_checking:
                         capture(captured)
                 else:
-                    piece = None
+                    board.cur_piece = None
                     return 0
     if just_checking:
-        return piece
-    for g in piecesDic:
-        if piecesDic[g].shape() == pawnB:
-            piecesDic[g].enpassantable = False
-        if piecesDic[g].shape() == pawnW:
-            piecesDic[g].enpassantable = False
-    if (piece.shape() == pawnB or piece.shape() == pawnW) and (y == y_old + 2 or y == y_old - 2):
-        piece.enpassantable = True
-    piece.speed(5)
-    del piecesDic[x_old, y_old]
-    piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
-    piece.hasMoved = True
-    piece = None
-    whiteTurn = not whiteTurn
+        return board.cur_piece
+    for g in board.piecesDic:
+        if board.piecesDic[g].shape() == pawnB:
+            board.piecesDic[g].enpassantable = False
+        if board.piecesDic[g].shape() == pawnW:
+            board.piecesDic[g].enpassantable = False
+    if (board.cur_piece.shape() == pawnB or board.cur_piece.shape() == pawnW) and (y == y_old + 2 or y == y_old - 2):
+        board.cur_piece.enpassantable = True
+    board.cur_piece.speed(5)
+    del board.piecesDic[x_old, y_old]
+    board.cur_piece.goto(25 + x * SIZE, 25 + y * SIZE)
+    board.piecesDic[x, y] = board.cur_piece
+    board.cur_piece.hasMoved = True
+    board.cur_piece = None
+    board.end_turn()
     return "success"  # returns if a move was successfully completed
 
 
 def gameplay(click_x, click_y):
-    global piece, all_moves
-
     click_x = click_x // SIZE
     click_y = click_y // SIZE
 
-    if piece:
+    if board.cur_piece:
         if not move_possible(click_x, click_y, False):  # if it was not a successful move, just end this function
             return 0
         all_moves = {}
@@ -524,25 +521,25 @@ def gameplay(click_x, click_y):
         # this is used to check for checkmate or stalemate
         for x in range(8):
             for y in range(8):
-                temp_dic = piecesDic.copy()  # I use a temp copy to loop through so the compiler doesn't complain about
-                # the dictionary changing. It changes when the 'check_caller' function is called, but the compiler
-                # doesn't know that it gets changed right back to the original dictionary in the same function.
+                temp_dic = board.piecesDic.copy()  # I use a temp copy to loop through so the compiler doesn't complain
+                #  about the dictionary changing. It changes when the 'check_caller' function is called, but the
+                # compiler doesn't know that it gets changed right back to the original dictionary in the same function.
                 for px, py in temp_dic:
-                    piece = piecesDic[px, py]
-                    if piece.color == "white" and not whiteTurn:
-                        piece = None
+                    board.cur_piece = board.piecesDic[px, py]
+                    if board.cur_piece.color == "white" and not board.whiteTurn:
+                        board.cur_piece = None
                         continue
-                    elif piece.color == "black" and whiteTurn:
-                        piece = None
+                    elif board.cur_piece.color == "black" and board.whiteTurn:
+                        board.cur_piece = None
                         continue
-                    if move_possible(x, y, True):
-                        all_moves[piece] = all_moves.get(piece, []) + [x, y]  # if piece can go to x, y, it is stored
+                    if move_possible(x, y, True):  # if piece can go to x, y, it is stored
+                        all_moves[board.cur_piece] = all_moves.get(board.cur_piece, []) + [x, y]
         if all_moves == {}:  # if no moves remain, the game is over!
             gameover = turtle.Turtle()
             if check() == "no":  # if it is a players turn and they have no legal moves left, it is stalemate
                 print("stalemate")
                 gameover.shape(stalemate)
-            elif whiteTurn:  # otherwise whoever is in check and has no legal moves loses
+            elif board.whiteTurn:  # otherwise whoever is in check and has no legal moves loses
                 print("checkmate, black wins!")
                 gameover.shape(black_wins)
             else:
@@ -551,15 +548,15 @@ def gameplay(click_x, click_y):
             gameover.penup()
             gameover.speed(1)
             gameover.goto(4 * SIZE, 4 * SIZE)  # game over picture moves to center of screen
-        piece = None
+        board.cur_piece = None
     else:
-        piece = board.get_piece(click_x, click_y)  # stores the piece the player clicks on
-        if not piece:  # if the player clicked on a square with no piece
+        board.cur_piece = board.get_piece(click_x, click_y)  # stores the piece the player clicks on
+        if not board.cur_piece:  # if the player clicked on a square with no piece
             return 0
-        if piece.color == "white" and not whiteTurn:  # player tried to move opponents piece
-            piece = None
-        elif piece.color == "black" and whiteTurn:
-            piece = None
+        if board.cur_piece.color == "white" and not board.whiteTurn:  # player tried to move opponents piece
+            board.cur_piece = None
+        elif board.cur_piece.color == "black" and board.whiteTurn:
+            board.cur_piece = None
 
 
 turtle.onscreenclick(gameplay, 1)
