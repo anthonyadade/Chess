@@ -53,132 +53,52 @@ class Board:
         return piecesDic.get((x, y))
 
 
-def rook(color, x, y):
+def piece_setup(color, shape, x, y):
     piece = turtle.Turtle()
     piece.speed(0)
-    if color == "black":
-        piece.shape(rookB)
-    else:
-        piece.shape(rookW)
+    piece.shape(shape)
     piece.color = color
     piece.hasMoved = False
     piece.penup()
     piece.goto(25 + x * SIZE, 25 + y * SIZE)
     piecesDic[x, y] = piece
     return piece
-
-
-def knight(color, x, y):
-    piece = turtle.Turtle()
-    piece.speed(0)
-    if color == "black":
-        piece.shape(knightB)
-    else:
-        piece.shape(knightW)
-    piece.color = color
-    piece.hasMoved = None  # Doesn't matter, placeholder
-    piece.penup()
-    piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
-    return piece
-
-
-def bishop(color, x, y):
-    piece = turtle.Turtle()
-    piece.speed(0)
-    if color == "black":
-        piece.shape(bishopB)
-    else:
-        piece.shape(bishopW)
-    piece.color = color
-    piece.hasMoved = None  # Doesn't matter, placeholder
-    piece.penup()
-    piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
-    return piece
-
-
-def queen(color, x, y):
-    piece = turtle.Turtle()
-    piece.speed(0)
-    if color == "black":
-        piece.shape(queenB)
-    else:
-        piece.shape(queenW)
-    piece.color = color
-    piece.hasMoved = None  # Doesn't matter, placeholder
-    piece.penup()
-    piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
-    return piece
-
-
-def king(color, x, y):
-    piece = turtle.Turtle()
-    piece.speed(0)
-    if color == "black":
-        piece.shape(kingB)
-    else:
-        piece.shape(kingW)
-    piece.color = color
-    piece.hasMoved = False
-    piece.penup()
-    piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
-    return piece
-
-
-def pawn(color, x, y):
-    piece = turtle.Turtle()
-    piece.speed(0)
-    if color == "black":
-        piece.shape(pawnB)
-    else:
-        piece.shape(pawnW)
-    piece.color = color
-    piece.hasMoved = False
-    piece.enpassantable = False
-    piece.penup()
-    piece.goto(25 + x * SIZE, 25 + y * SIZE)
-    piecesDic[x, y] = piece
-    return piece
-
 
 # initialize all pieces
 class Pieces:
     def __init__(self):
-        self.bRook = rook("black", 0, 7)
-        self.bKnight = knight("black", 1, 7)
-        self.bBishop = bishop("black", 2, 7)
-        self.bQueen = queen("black", 3, 7)
-        self.bKing = king("black", 4, 7)
-        self.bBishop2 = bishop("black", 5, 7)
-        self.bKnight2 = knight("black", 6, 7)
-        self.bRook2 = rook("black", 7, 7)
-        self.bPawn = pawn("black", 0, 6)
-        self.bPawn2 = pawn("black", 1, 6)
-        self.bPawn3 = pawn("black", 2, 6)
-        self.bPawn4 = pawn("black", 3, 6)
-        self.bPawn5 = pawn("black", 4, 6)
-        self.bPawn6 = pawn("black", 5, 6)
-        self.bPawn7 = pawn("black", 6, 6)
-        self.bPawn8 = pawn("black", 7, 6)
-        self.wRook = rook("white", 0, 0)
-        self.wKnight = knight("white", 1, 0)
-        self.wBishop = bishop("white", 2, 0)
-        self.wQueen = queen("white", 3, 0)
-        self.wKing = king("white", 4, 0)
-        self.wBishop2 = bishop("white", 5, 0)
-        self.wKnight2 = knight("white", 6, 0)
-        self.wRook2 = rook("white", 7, 0)
-        self.wPawn = pawn("white", 0, 1)
-        self.wPawn2 = pawn("white", 1, 1)
-        self.wPawn3 = pawn("white", 2, 1)
-        self.wPawn4 = pawn("white", 3, 1)
-        self.wPawn5 = pawn("white", 4, 1)
-        self.wPawn6 = pawn("white", 5, 1)
-        self.wPawn7 = pawn("white", 6, 1)
-        self.wPawn8 = pawn("white", 7, 1)
+        self.bRook = piece_setup("black", rookB, 0, 7)
+        self.bKnight = piece_setup("black", knightB, 1, 7)
+        self.bBishop = piece_setup("black", bishopB, 2, 7)
+        self.bQueen = piece_setup("black", queenB, 3, 7)
+        self.bKing = piece_setup("black", kingB, 4, 7)
+        self.bBishop2 = piece_setup("black",bishopB, 5, 7)
+        self.bKnight2 = piece_setup("black",knightB, 6, 7)
+        self.bRook2 = piece_setup("black", rookB, 7, 7)
+        self.bPawn = piece_setup("black", pawnB, 0, 6)
+        self.bPawn2 = piece_setup("black", pawnB, 1, 6)
+        self.bPawn3 = piece_setup("black", pawnB,  2, 6)
+        self.bPawn4 = piece_setup("black", pawnB, 3, 6)
+        self.bPawn5 = piece_setup("black", pawnB, 4, 6)
+        self.bPawn6 = piece_setup("black", pawnB, 5, 6)
+        self.bPawn7 = piece_setup("black", pawnB, 6, 6)
+        self.bPawn8 = piece_setup("black", pawnB, 7, 6)
+        self.wRook = piece_setup("white", rookW, 0, 0)
+        self.wKnight = piece_setup("white", knightW, 1, 0)
+        self.wBishop = piece_setup("white", bishopW, 2, 0)
+        self.wQueen = piece_setup("white", queenW, 3, 0)
+        self.wKing = piece_setup("white", kingW, 4, 0)
+        self.wBishop2 = piece_setup("white", bishopW, 5, 0)
+        self.wKnight2 = piece_setup("white", knightW, 6, 0)
+        self.wRook2 = piece_setup("white", rookW, 7, 0)
+        self.wPawn = piece_setup("white", pawnW, 0, 1)
+        self.wPawn2 = piece_setup("white", pawnW, 1, 1)
+        self.wPawn3 = piece_setup("white", pawnW, 2, 1)
+        self.wPawn4 = piece_setup("white", pawnW, 3, 1)
+        self.wPawn5 = piece_setup("white", pawnW, 4, 1)
+        self.wPawn6 = piece_setup("white", pawnW, 5, 1)
+        self.wPawn7 = piece_setup("white", pawnW, 6, 1)
+        self.wPawn8 = piece_setup("white", pawnW, 7, 1)
 
     # get position of king
     def getpos(self, color):
@@ -348,7 +268,10 @@ def pawnmovement(x_old, y_old, x, y, piece, captured, just_checking):
     # promoting pawn to a queen, which happens at the end of the board, at y == 0 or 7, and nothing is in the way
     if (y == 7 or y == 0) and not captured and not just_checking:
         capture(piece)  # get rid of old pawn
-        piece = queen(piece.color, x_old, y_old)
+        if (piece.color == "white"):
+            piece = piece_setup(piece.color, queenW, x_old, y_old)
+        else:
+            piece = piece_setup(piece.color, queenB, x_old, y_old)
         piecesDic[x_old, y_old] = piece
         return piece
     return piece
