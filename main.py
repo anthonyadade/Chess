@@ -108,15 +108,15 @@ class Pieces:
             return self.bKing.xcor() // SIZE, self.bKing.ycor() // SIZE
 
 
-x = 10
+backgroundFix = 10
 display = turtle.Screen()
 board = Board()
 
-turtle.setup(board.screenSize + x, board.screenSize + x)  # change window size
+turtle.setup(board.screenSize + backgroundFix, board.screenSize + backgroundFix)  # change window size
 boardPic = "board.gif"
 
-# to make 0,0 the origin, x was added to fix center backgroud
-turtle.setworldcoordinates(x, x, board.screenSize, board.screenSize)
+# to make 0,0 the origin, backgroundFix was added to fix center background
+turtle.setworldcoordinates(backgroundFix, backgroundFix, board.screenSize, board.screenSize)
 display.bgpic(boardPic)
 
 # used to recenter background pic https://stackoverflow.com/questions/49086447/
@@ -167,6 +167,7 @@ def capture(victim):
 def check(x=-1, y=-1, color="no"):
     black_king = pieces.getpos("black")
     white_king = pieces.getpos("white")
+    # king's position will be outdated if it was just moved, so we pass in the new pos in this case
     if x != -1 and y != -1 and color != "no":
         if color == "white":
             white_king = x, y
