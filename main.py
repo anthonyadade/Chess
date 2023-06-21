@@ -163,6 +163,28 @@ def capture(victim):
     victim.hideturtle()
 
 
+# Scans for non-diagonal checks from a rook or queen. If a check is found, returns which color is in check,
+# otherwise returns None
+def non_diagonal_check(cur_x, cur_y, cur_king):
+    # used to reduce repetition
+    def loops(a, b, c, d, e):
+        temp_cor = [cur_x + a, cur_y + b]
+        while temp_cor[e] * d >= c * d:
+            if (temp_cor[0], temp_cor[1]) == cur_king:
+                return board.get_piece(temp_cor[0], temp_cor[1]).color
+            if board.get_piece(temp_cor[0], temp_cor[1]):
+                break
+            temp_cor[0] += a
+            temp_cor[1] += b
+
+    directions = {"left": [-1, 0, 0, 1, 0], "up": [0, 1, 7, -1, 1],
+                  "right": [1, 0, 7, -1, 0], "down": [0, -1, 0, 1, 1]}
+    for a, b, c, d, e in directions.values():
+        check_found = loops(a, b, c, d, e)
+        if check_found:
+            return check_found
+
+
 # return which color is in check, no if no one is
 def check(x=-1, y=-1, color="no"):
     black_king = pieces.getpos("black")
@@ -187,34 +209,9 @@ def check(x=-1, y=-1, color="no"):
                 return "white"
         # below checks horizontal and vertical for rook and queen
         if piece.shape() == rookB or piece.shape() == rookW or piece.shape() == queenB or piece.shape() == queenW:
-            # used to reduce repetition
-            def loops(a, b, c, d, e):
-                temp_cor = [x + a, y + b]
-                while temp_cor[e] * d >= c * d:
-                    if (temp_cor[0], temp_cor[1]) == cur_king:
-                        return board.get_piece(temp_cor[0], temp_cor[1]).color
-                    if board.get_piece(temp_cor[0], temp_cor[1]):
-                        break
-                    temp_cor[0] += a
-                    temp_cor[1] += b
-
-            # left
-            check = loops(-1, 0, 0, 1, 0)
-            if check:
-                return check
-            # up
-            check = loops(0, 1, 7, -1, 1)
-            if check:
-                return check
-            # right
-            check = loops(1, 0, 7, -1, 0)
-            if check:
-                return check
-            # down
-            check = loops(0, -1, 0, 1, 1)
-            if check:
-                return check
-
+            check_found = non_diagonal_check(x, y, cur_king)
+            if check_found:
+                return check_found
         # takes care of bishop and rest of Queen's moves
         if piece.shape() == bishopB or piece.shape() == bishopW or piece.shape() == queenB or piece.shape() == queenW:
             possible_moves = diagonal_movement(x, y)
