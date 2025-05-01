@@ -12,3 +12,7 @@ To run the program (Windows):
 7. In the command prompt, type 'python main.py' and press enter.
 
 Thank you for viewing!
+
+## 📸 Demo
+
+![Chess demo](./demo.gif)
